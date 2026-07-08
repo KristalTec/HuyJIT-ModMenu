@@ -1,39 +1,61 @@
-name: Build HuyJIT Mod Menu
+name: Build Huy JIT Mod Menu
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
+
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Theos
-        run: |
-          git clone --recursive https://github.com/theos/theos.git $HOME/theos
-          echo "THEOS=$HOME/theos" >> $GITHUB_ENV
-          echo "$HOME/theos/bin" >> $GITHUB_PATH
-          
-      - name: Install iOS SDK
-        run: |
-          mkdir -p $HOME/theos/sdks
-          cd $HOME/theos/sdks
-          wget https://github.com/sorah/sdks/releases/download/iphoneos16.5/iPhoneOS16.5.sdk.tar.xz
-          tar -xJf iPhoneOS16.5.sdk.tar.xz
-          echo "SDKROOT=$HOME/theos/sdks/iPhoneOS16.5.sdk" >> $GITHUB_ENV
-          echo "IPHONEOS_DEPLOYMENT_TARGET=16.5" >> $GITHUB_ENV
-      
-      - name: Build Package
-        run: |
-          make package
-      
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: HuyJIT-ModMenu
-          path: |
-            packages/*.deb
-            .theos/obj/*.dylib
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Set up Theos Environment
+      run: |
+        sudo git clone --recursive https://github.com/theos/theos.git /opt/theos
+        sudo chown -R $USER /opt/theos
+        
+        # Clone iOS SDKs and copy the 16.5 SDK into the Theos directory
+        git clone https://github.com/theos/sdks.git /tmp/sdks
+        mkdir -p /opt/theos/sdks
+        cp -r /tmp/sdks/iPhoneOS16.5.sdk /opt/theos/sdks/
+        
+        # Set environment variable for subsequent steps
+        echo "THEOS=/opt/theos" >> $GITHUB_ENV
+
+    - name: Prepare Output Directory
+      run: mkdir -p build_output
+
+    - name: Build Standalone Dylib (Non-Jailbreak)
+      run: |
+        make clean
+        make FINALPACKAGE=1
+        # Extract the compiled .dylib file from the build object directory
+        find .theos/obj/ -name "*.dylib" -exec cp {} build_output/ \;
+
+    - name: Build Rootless Deb Package (Jailbreak)
+      run: |
+        make clean
+        make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
+        # Copy the rootless .deb package to output
+        find packages/ -name "*.deb" -exec cp {} build_output/ \;
+
+    - name: Build Rootful Deb Package (Jailbreak)
+      run: |
+        make clean
+        make package FINALPACKAGE=1
+        # Copy the rootful .deb package to output
+        find packages/ -name "*,deb" -o -name "*.deb" -exec cp {} build_output/ \;
+
+    - name: Upload Compiled Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Huy-JIT-ModMenu-Builds
+        path: build_output/
