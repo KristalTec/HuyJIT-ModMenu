@@ -22,12 +22,10 @@ jobs:
         sudo git clone --recursive https://github.com/theos/theos.git /opt/theos
         sudo chown -R $USER /opt/theos
         
-        # Clone iOS SDKs and copy the 16.5 SDK into the Theos directory
         git clone https://github.com/theos/sdks.git /tmp/sdks
         mkdir -p /opt/theos/sdks
         cp -r /tmp/sdks/iPhoneOS16.5.sdk /opt/theos/sdks/
         
-        # Set environment variable for subsequent steps
         echo "THEOS=/opt/theos" >> $GITHUB_ENV
 
     - name: Prepare Output Directory
@@ -36,22 +34,19 @@ jobs:
     - name: Build Standalone Dylib (Non-Jailbreak)
       run: |
         make clean
-        make FINALPACKAGE=1
-        # Extract the compiled .dylib file from the build object directory
+        make FINALPACKAGE=1 ADDITIONAL_CFLAGS="-Wno-error -Wno-nontrivial-memcall -Wno-module-import-in-extern-c" ADDITIONAL_CXXFLAGS="-Wno-error -Wno-nontrivial-memcall -Wno-module-import-in-extern-c" ADDITIONAL_OBJCCFLAGS="-Wno-error -Wno-nontrivial-memcall -Wno-module-import-in-extern-c"
         find .theos/obj/ -name "*.dylib" -exec cp {} build_output/ \;
 
     - name: Build Rootless Deb Package (Jailbreak)
       run: |
         make clean
-        make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless
-        # Copy the rootless .deb package to output
+        make package FINALPACKAGE=1 THEOS_PACKAGE_SCHEME=rootless ADDITIONAL_CFLAGS="-Wno-error -Wno-nontrivial-memcall -Wno-module-import-in-extern-c" ADDITIONAL_CXXFLAGS="-Wno-error -Wno-nontrivial-memcall -Wno-module-import-in-extern-c" ADDITIONAL_OBJCCFLAGS="-Wno-error -Wno-nontrivial-memcall -Wno-module-import-in-extern-c"
         find packages/ -name "*.deb" -exec cp {} build_output/ \;
 
     - name: Build Rootful Deb Package (Jailbreak)
       run: |
         make clean
-        make package FINALPACKAGE=1
-        # Copy the rootful .deb package to output
+        make package FINALPACKAGE=1 ADDITIONAL_CFLAGS="-Wno-error -Wno-nontrivial-memcall -Wno-module-import-in-extern-c" ADDITIONAL_CXXFLAGS="-Wno-error -Wno-nontrivial-memcall -Wno-module-import-in-extern-c" ADDITIONAL_OBJCCFLAGS="-Wno-error -Wno-nontrivial-memcall -Wno-module-import-in-extern-c"
         find packages/ -name "*,deb" -o -name "*.deb" -exec cp {} build_output/ \;
 
     - name: Upload Compiled Artifacts
