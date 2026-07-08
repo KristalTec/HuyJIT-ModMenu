@@ -19,6 +19,9 @@ jobs:
 
     - name: Set up Theos Environment
       run: |
+        # دامەزراندنی ldid بۆ واژۆکردنی باینەرییەکان
+        brew install ldid
+        
         sudo git clone --recursive https://github.com/theos/theos.git /opt/theos
         sudo chown -R $USER /opt/theos
         
