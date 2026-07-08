@@ -21,10 +21,10 @@ jobs:
         run: |
           mkdir -p $HOME/theos/sdks
           cd $HOME/theos/sdks
-          wget https://github.com/theos/sdks/releases/download/iphoneos15.5/iPhoneOS15.5.sdk.tar.xz
-          tar -xJf iPhoneOS15.5.sdk.tar.xz
-          echo "SDKROOT=$HOME/theos/sdks/iPhoneOS15.5.sdk" >> $GITHUB_ENV
-          echo "IPHONEOS_DEPLOYMENT_TARGET=15.5" >> $GITHUB_ENV
+          wget https://github.com/sorah/sdks/releases/download/iphoneos16.5/iPhoneOS16.5.sdk.tar.xz
+          tar -xJf iPhoneOS16.5.sdk.tar.xz
+          echo "SDKROOT=$HOME/theos/sdks/iPhoneOS16.5.sdk" >> $GITHUB_ENV
+          echo "IPHONEOS_DEPLOYMENT_TARGET=16.5" >> $GITHUB_ENV
       
       - name: Build Package
         run: |
